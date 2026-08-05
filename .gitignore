@@ -4,3 +4,7 @@ uploads/
 *.log
 .env
 .DS_Store
+s.yaml
+deploy-fc.js
+test-fc.js
+deploy.zip

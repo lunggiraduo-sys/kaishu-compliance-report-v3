@@ -1659,20 +1659,35 @@ function _isBinaryContent(ct) {
   return /(image\/|audio\/|video\/|application\/octet-stream|application\/pdf|application\/zip|application\/download|application\/x-)/i.test(ct);
 }
 
-exports.handler = async (event, context) => {
+exports.handler = async (rawEvent, context) => {
+  let event = rawEvent;
+  if (typeof event === 'string' || Buffer.isBuffer(event)) {
+    event = JSON.parse(event);
+  }
   const server = await _getFcServer();
   const { port } = server.address();
-  const path = (event.path || '/') +
-    ((event.queryString && Object.keys(event.queryString).length) ? '?' + _buildQueryString(event.queryString) : '');
+
+  // 兼容 FC 2.0 (path/queryString) 和 FC 3.0 (rawPath/queryStringParameters)
+  const rawPath = event.rawPath || event.path || '/';
+  const queries = event.queryStringParameters || event.queries || event.queryString || {};
+  const method = event.httpMethod || event.method || 'GET';
   const headers = Object.assign({}, event.headers || {});
   if (!headers.host) headers.host = '127.0.0.1';
+
+  // 去掉可能存在的触发器路径前缀
+  let cleanPath = rawPath;
+  const prefixMatch = cleanPath.match(/^\/(2016-08-15|proxy)\/[^/]+\/[^/]+/);
+  if (prefixMatch) cleanPath = cleanPath.substring(prefixMatch[0].length) || '/';
+
+  const fullPath = cleanPath +
+    ((queries && Object.keys(queries).length) ? '?' + _buildQueryString(queries) : '');
 
   return new Promise((resolve, reject) => {
     const req = http.request({
       host: '127.0.0.1',
       port,
-      path,
-      method: event.httpMethod || 'GET',
+      path: fullPath,
+      method,
       headers,
     }, (res) => {
       const chunks = [];
