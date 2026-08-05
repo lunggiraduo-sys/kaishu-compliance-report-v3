@@ -617,10 +617,12 @@ function fmtSize(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1
 
 async function api(path, opts={}){
   const headers = { 'content-type':'application/json', ...(opts.headers||{}) };
+  const token = localStorage.getItem('ks_admin_token');
+  if (token) headers['authorization'] = 'Bearer ' + token;
   if (adminState.csrfToken && opts.method && opts.method !== 'GET') {
     headers['x-csrf-token'] = adminState.csrfToken;
   }
-  const res = await fetch(API_BASE + path, { ...opts, headers });
+  const res = await fetch(API_BASE + path, { ...opts, headers, credentials: 'include' });
   const data = await res.json().catch(()=>({error:{code:'PARSE_ERROR',message:'响应解析失败'}}));
   if (!res.ok) throw data.error || {code:'ERROR',message:'请求失败'};
   return data;
@@ -787,7 +789,7 @@ async function uploadFile(file){
   try {
     const fd = new FormData();
     fd.append('file', file);
-    const res = await fetch(API_BASE + '/api/public/uploads', {method:'POST', body:fd});
+    const res = await fetch(API_BASE + '/api/public/uploads', {method:'POST', body:fd, credentials:'include'});
     const data = await res.json();
     if (!res.ok) throw data.error;
     const att = data.attachments[0];
@@ -978,6 +980,7 @@ async function adminLogin(e){
     const res = await api('/api/admin/login', {method:'POST', body:JSON.stringify({username, password})});
     adminState.csrfToken = res.csrf_token;
     adminState.user = res.user;
+    if (res.session_token) localStorage.setItem('ks_admin_token', res.session_token);
     showAdminShell();
     toast('登录成功','success');
   } catch(err){
@@ -1001,6 +1004,7 @@ function showAdminShell(){
 
 async function adminLogout(){
   try { await api('/api/admin/logout', {method:'POST'}); } catch {}
+  localStorage.removeItem('ks_admin_token');
   adminState = {csrfToken:'',user:null,currentPage:'dashboard'};
   showAdminLogin();
   toast('已退出','success');
