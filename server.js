@@ -266,8 +266,16 @@ async function createAdminSession(store, config, user, ip) {
 }
 
 async function resolveAdminSession(store, config, req) {
-  const cookies = parseCookies(req.headers.cookie);
-  const token = cookies['ks_admin_session'];
+  // 优先从 Authorization: Bearer <token> 读取（跨域友好），fallback 到 Cookie
+  let token = null;
+  const auth = req.headers['authorization'] || req.headers['Authorization'];
+  if (auth && auth.startsWith('Bearer ')) {
+    token = auth.slice(7).trim();
+  }
+  if (!token) {
+    const cookies = parseCookies(req.headers.cookie);
+    token = cookies['ks_admin_session'];
+  }
   if (!token) return null;
 
   const data = await store.read();
@@ -1002,6 +1010,7 @@ async function handleAdminLogin(req, res, store, config, rateLimiter) {
   }));
   sendJson(res, 200, {
     user: { id: user.id, username: user.username, name: user.name, roles: user.roles },
+    session_token: token,
     csrf_token: csrfToken,
     expires_at: expiresAt,
   });
@@ -1009,8 +1018,13 @@ async function handleAdminLogin(req, res, store, config, rateLimiter) {
 
 // ─── 管理：登出 ─────────────────────────────────────────────
 async function handleAdminLogout(req, res, store, config) {
-  const cookies = parseCookies(req.headers.cookie);
-  const token = cookies['ks_admin_session'];
+  let token = null;
+  const auth = req.headers['authorization'] || req.headers['Authorization'];
+  if (auth && auth.startsWith('Bearer ')) token = auth.slice(7).trim();
+  if (!token) {
+    const cookies = parseCookies(req.headers.cookie);
+    token = cookies['ks_admin_session'];
+  }
   if (token) {
     const tokenHash = hmacDigest(token, config.sessionSecret);
     await store.transaction((d) => {
@@ -1682,10 +1696,11 @@ exports.handler = async (rawEvent, context) => {
   const server = await _getFcServer();
   const { port } = server.address();
 
-  // 兼容 FC 2.0 (path/queryString) 和 FC 3.0 (rawPath/queryStringParameters)
-  const rawPath = event.rawPath || event.path || '/';
-  const queries = event.queryStringParameters || event.queries || event.queryString || {};
-  const method = event.httpMethod || event.method || 'GET';
+  // 兼容 FC 2.0 (path/queryString/method/httpMethod) 和 FC 3.0 (rawPath/queryParameters/requestContext.http.method)
+  const rawPath = event.rawPath || event.path || (event.requestContext && event.requestContext.http && event.requestContext.http.path) || '/';
+  const queries = event.queryParameters || event.queryStringParameters || event.queries || event.queryString || {};
+  const method = (event.requestContext && event.requestContext.http && event.requestContext.http.method)
+    || event.httpMethod || event.method || 'GET';
   const headers = Object.assign({}, event.headers || {});
   if (!headers.host) headers.host = '127.0.0.1';
 
