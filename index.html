@@ -1,0 +1,1410 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>凯叔讲故事 廉洁举报平台</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%23EEF8E9%22/%3E%3Cpath d=%22M16 7l8 3v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10v-5l8-3z%22 fill=%22none%22 stroke=%22%2361B631%22 stroke-width=%222%22/%3E%3Cpath d=%22m12 15 2.5 2.5L19 13%22 fill=%22none%22 stroke=%22%23478A24%22 stroke-width=%222%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
+<style>
+/* ═══ 设计令牌 ═══ */
+:root{
+  --brand:#61B631;--brand-hover:#529F29;--brand-active:#478A24;--brand-soft:#EEF8E9;
+  --page:#F5F7F5;--surface:#FFF;--surface-2:#FAFBFA;
+  --text:#18201B;--text-2:#5E6961;--text-3:#8B948C;
+  --border:#DCE3DE;--border-2:#C5CFC7;
+  --success:#287A3E;--success-soft:#EDF7F0;
+  --warning:#9A6700;--warning-soft:#FFF7E6;
+  --danger:#B42318;--danger-soft:#FEF3F2;
+  --info:#175CD3;--info-soft:#EFF6FF;
+  --font:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r-sm:6px;--r-md:8px;--r-lg:12px;
+  --shadow:0 1px 3px rgba(24,32,27,.06),0 8px 24px rgba(24,32,27,.06);
+  --shadow-lg:0 12px 32px rgba(24,32,27,.12);
+  --w:1200px;--form-w:840px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-width:320px;color:var(--text);background:var(--page);font:14px/1.6 var(--font);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.55}
+[hidden]{display:none!important}
+:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(97,182,49,.24)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+/* ═══ 通用组件 ═══ */
+.btn{min-height:40px;padding:9px 18px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:var(--r-sm);background:var(--surface);font-weight:500;transition:all .15s}
+.btn:hover{border-color:var(--border-2)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{color:#fff;background:var(--brand);border-color:var(--brand)}
+.btn-primary:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+.btn-secondary{border-color:var(--border-2);background:var(--surface)}
+.btn-text{padding-inline:8px;border-color:transparent;background:transparent}
+.btn-danger{color:var(--danger);border-color:var(--danger)}
+.btn-lg{min-height:48px;padding-inline:24px}
+.btn-sm{min-height:32px;padding:5px 12px;font-size:13px}
+.icon{width:20px;height:20px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icon-sm{width:16px;height:16px}
+.icon-lg{width:24px;height:24px}
+
+.input,input[type=text],input[type=date],input[type=tel],input[type=password],select,textarea{
+  width:100%;min-height:40px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);
+  transition:border-color .15s,box-shadow .15s}
+textarea{min-height:132px;resize:vertical}
+input:hover,select:hover,textarea:hover{border-color:var(--border-2)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 3px rgba(97,182,49,.16)}
+[aria-invalid=true]{border-color:var(--danger)!important}
+.label{display:inline-block;margin-bottom:8px;font-weight:500;line-height:20px}
+.req{color:var(--danger)}
+.help{margin:6px 0 0;color:var(--text-3);font-size:12px}
+.err{min-height:18px;margin:4px 0 0;color:var(--danger);font-size:12px}
+.field{margin-bottom:24px}
+.field:last-child{margin-bottom:0}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.panel{padding:32px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface)}
+.toast-wrap{position:fixed;z-index:50;right:24px;bottom:24px;width:min(360px,calc(100% - 32px));display:grid;gap:8px}
+.toast{padding:13px 14px;display:flex;gap:10px;align-items:start;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);box-shadow:var(--shadow-lg);animation:toastIn .2s}
+.toast.error{border-color:#F3C1BC;background:var(--danger-soft)}
+.toast.success{border-color:#BCE8C9;background:var(--success-soft)}
+@keyframes toastIn{from{transform:translateX(20px);opacity:.5}}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:500}
+.badge::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.badge-warning{color:var(--warning);background:var(--warning-soft)}
+.badge-info{color:var(--info);background:var(--info-soft)}
+.badge-success{color:var(--success);background:var(--success-soft)}
+.badge-danger{color:var(--danger);background:var(--danger-soft)}
+.badge-muted{color:var(--text-3);background:var(--surface-2)}
+
+/* ═══ 前台：顶栏 ═══ */
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.topbar-inner{width:min(calc(100% - 48px),var(--w));height:100%;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand{display:inline-flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+.brand-mark{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;background:var(--brand-soft);color:var(--brand-active)}
+.nav-bar{display:flex;align-items:center;gap:4px}
+.nav-btn{min-height:40px;padding:0 14px;border:0;border-radius:var(--r-sm);background:transparent;font-weight:500}
+.nav-btn:hover{background:var(--surface-2)}
+.nav-btn[aria-current=true]{color:var(--brand-active);background:var(--brand-soft)}
+
+/* ═══ 前台：Hero ═══ */
+.hero{background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden}
+.hero-inner{width:min(calc(100% - 48px),var(--w));min-height:440px;margin:auto;padding:72px 0;display:grid;grid-template-columns:1.2fr .8fr;gap:64px;align-items:center}
+h1{margin:0 0 20px;font-size:38px;line-height:1.3;letter-spacing:-.02em;font-weight:700}
+h2{margin:0 0 8px;font-size:24px;font-weight:600}
+h3{margin:0 0 8px;font-size:18px;font-weight:600}
+.hero-copy{max-width:580px;color:var(--text-2);font-size:16px;line-height:1.7}
+.hero-actions{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
+.promise{padding:28px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface)}
+.promise>p{color:var(--text-2);margin:0 0 20px}
+.promise-list{margin:0;padding:0;display:grid;gap:18px;list-style:none}
+.promise-list li{display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:start}
+.promise-icon{width:36px;height:36px;display:grid;place-items:center;color:var(--brand-active);background:var(--brand-soft);border-radius:var(--r-sm)}
+.promise-list strong{display:block;margin-bottom:2px}
+.promise-list span{color:var(--text-2);font-size:12px}
+
+/* ═══ 前台：信任栏 ═══ */
+.trust{background:var(--surface-2);border-bottom:1px solid var(--border)}
+.trust-inner{width:min(calc(100% - 48px),var(--w));margin:auto;padding:28px 0;display:grid;grid-template-columns:repeat(3,1fr)}
+.trust-item{padding:0 32px;border-right:1px solid var(--border)}
+.trust-item:first-child{padding-left:0}
+.trust-item:last-child{padding-right:0;border-right:0}
+.trust-item strong{display:block;margin-bottom:4px}
+.trust-item span{color:var(--text-2);font-size:12px}
+
+/* ═══ 前台：工作区 ═══ */
+.workspace{width:min(calc(100% - 48px),var(--w));margin:auto;padding:56px 0 80px}
+.section-head{margin-bottom:28px}
+.section-head p{margin:0;color:var(--text-2)}
+.wizard{max-width:var(--form-w);margin:auto}
+
+/* 步骤指示器 */
+.steps{display:flex;gap:0;margin-bottom:24px}
+.step{flex:1;display:flex;align-items:center;gap:8px;padding:12px 8px;border-radius:var(--r-sm);font-size:13px;color:var(--text-2);position:relative}
+.step-dot{width:28px;height:28px;display:grid;place-items:center;flex:0 0 auto;border:2px solid var(--border-2);border-radius:50%;font-weight:600;font-size:12px}
+.step.active{color:var(--text);background:var(--brand-soft)}
+.step.active .step-dot{border-color:var(--brand);background:var(--brand);color:#fff}
+.step.done .step-dot{border-color:var(--brand);background:var(--brand);color:#fff}
+.step:not(:last-child)::after{content:"";flex:1;height:2px;background:var(--border);margin:0 4px}
+.step.done:not(:last-child)::after{background:var(--brand)}
+
+/* 选择卡片 */
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice{position:relative}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice label{min-height:54px;height:100%;padding:12px 14px;display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);cursor:pointer;transition:all .15s}
+.choice label::before{content:"";width:18px;height:18px;flex:0 0 auto;border:2px solid var(--border-2);border-radius:50%;transition:all .15s}
+.choice input:checked+label{border-color:var(--brand);background:var(--brand-soft)}
+.choice input:checked+label::before{border:5px solid var(--brand);background:var(--surface)}
+.choice input:focus-visible+label{box-shadow:0 0 0 3px rgba(97,182,49,.24)}
+
+.sub-panel{padding:20px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface-2)}
+.subsection{margin-top:28px;padding-top:24px;border-top:1px solid var(--border)}
+.actions{margin-top:32px;padding-top:20px;display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--border)}
+
+/* 文件上传 */
+.upload-zone{padding:36px 20px;text-align:center;border:2px dashed var(--border-2);border-radius:var(--r-md);background:var(--surface-2);transition:all .15s;cursor:pointer}
+.upload-zone:hover,.upload-zone.dragging{border-color:var(--brand);background:var(--brand-soft)}
+.upload-icon{width:48px;height:48px;margin:0 auto 12px;display:grid;place-items:center;color:var(--text-2);border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface)}
+.upload-list{margin:16px 0 0;padding:0;display:grid;gap:8px;list-style:none}
+.upload-item{padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.upload-item-name{min-width:0;display:flex;align-items:center;gap:10px}
+.upload-item-name strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upload-item-meta{color:var(--text-3);font-size:12px;flex:0 0 auto}
+.notice{margin-top:16px;padding:12px 14px;display:flex;gap:10px;border-radius:var(--r-sm);font-size:13px}
+.notice-warning{color:#6F4A00;background:var(--warning-soft);border:1px solid #F1D49A}
+.notice-info{color:#164B9C;background:var(--info-soft);border:1px solid #B9D4FA}
+
+/* 回执 */
+.receipt{max-width:640px;margin:auto;text-align:center}
+.receipt-icon{width:64px;height:64px;margin:0 auto 20px;display:grid;place-items:center;color:var(--success);background:var(--success-soft);border-radius:50%}
+.receipt-box{margin:28px 0;padding:24px;text-align:left;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface-2)}
+.receipt-code{font:600 20px/1.5 var(--mono);overflow-wrap:anywhere}
+.receipt-warn{color:var(--danger);font-size:12px;margin-top:12px}
+
+/* 查询 */
+.query-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:24px;align-items:start}
+.timeline{margin:20px 0 0;padding:0;list-style:none}
+.timeline li{position:relative;padding:0 0 24px 28px}
+.timeline li::before{content:"";position:absolute;left:7px;top:8px;bottom:-8px;width:2px;background:var(--border)}
+.timeline li:last-child::before{display:none}
+.timeline li::after{content:"";position:absolute;left:2px;top:5px;width:12px;height:12px;border:3px solid var(--brand);border-radius:50%;background:var(--surface)}
+.timeline strong{display:block}
+.timeline p{margin:2px 0;color:var(--text-2)}
+.timeline time{color:var(--text-3);font-size:12px}
+.clue-list{margin:16px 0;padding:0;display:grid;gap:8px;list-style:none}
+.clue-list li{padding:12px;border-left:3px solid var(--brand);background:var(--surface-2);border-radius:0 var(--r-sm) var(--r-sm) 0}
+.clue-list p{margin:0 0 4px;white-space:pre-wrap;overflow-wrap:anywhere}
+.clue-list time{color:var(--text-3);font-size:12px}
+.empty{text-align:center;padding:48px 24px;color:var(--text-2)}
+
+/* ═══ 管理后台 ═══ */
+body.admin-mode{overflow:hidden}
+body.admin-mode #app-public{display:none}
+#app-admin{display:none}
+body.admin-mode #app-admin{display:block}
+
+.admin-login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#F5F7F5 0%,#EEF8E9 100%)}
+.admin-login-box{width:min(400px,calc(100% - 32px));padding:40px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow-lg)}
+.admin-login-brand{margin-bottom:32px;display:flex;align-items:center;gap:12px;font-size:18px;font-weight:600}
+.admin-login .btn{width:100%}
+
+.admin-shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.admin-sidebar{background:#1E2520;color:#D4DCD6;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.admin-sidebar-brand{padding:20px 16px;border-bottom:1px solid #2C3530;display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
+.admin-sidebar-brand .brand-mark{background:var(--brand);color:#fff}
+.admin-nav-section{margin:16px 8px 4px;color:#7A857D;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:0 8px}
+.admin-nav{display:grid;gap:2px;padding:0 8px}
+.admin-nav-item{min-height:42px;padding:0 12px;display:flex;align-items:center;gap:12px;color:#B8C0BA;border:0;border-radius:var(--r-sm);background:transparent;text-align:left;font-size:14px;transition:all .15s}
+.admin-nav-item:hover{color:#fff;background:#2A322C}
+.admin-nav-item[aria-current=true]{color:#fff;background:#2F3833}
+.admin-nav-item[aria-current=true]::before{content:"";position:absolute;left:0;width:3px;height:24px;background:var(--brand);border-radius:0 2px 2px 0}
+.admin-sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid #2C3530;font-size:12px;color:#7A857D}
+.admin-sidebar-footer strong{display:block;color:#D4DCD6;font-weight:500;margin-bottom:2px}
+
+.admin-main{min-width:0;display:flex;flex-direction:column;min-height:100vh}
+.admin-header{position:sticky;top:0;z-index:5;height:64px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);background:var(--surface)}
+.admin-header h1{margin:0;font-size:20px;font-weight:600}
+.admin-header-actions{display:flex;align-items:center;gap:8px}
+.admin-content{padding:32px;flex:1}
+.admin-page-title{margin-bottom:24px;display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.admin-page-title p{margin:0;color:var(--text-2)}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi{padding:20px 24px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface)}
+.kpi-label{color:var(--text-2);font-size:13px;margin-bottom:6px}
+.kpi-value{font-size:28px;font-weight:700;line-height:1.2}
+.kpi-trend{font-size:12px;color:var(--text-3);margin-top:4px}
+
+/* 表格 */
+.tbl-wrap{border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);overflow:hidden}
+.tbl-head{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border)}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{height:44px;padding:0 14px;color:var(--text-2);background:var(--surface-2);text-align:left;font-size:12px;font-weight:600;white-space:nowrap}
+td{padding:10px 14px;border-top:1px solid var(--border);vertical-align:middle}
+tbody tr:hover{background:var(--surface-2)}
+.td-main{font-weight:500}
+.td-sub{color:var(--text-3);font-size:12px}
+.row-link{color:var(--info);border:0;background:transparent;padding:4px 8px;border-radius:var(--r-sm);font-weight:500}
+.row-link:hover{text-decoration:underline}
+.pagination{padding:12px 16px;display:flex;align-items:center;justify-content:flex-end;gap:8px;border-top:1px solid var(--border)}
+
+/* 筛选 */
+.filter-bar{margin-bottom:16px;padding:16px;display:grid;grid-template-columns:1fr repeat(3,.5fr) auto;gap:12px;align-items:end;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface)}
+.filter-bar label{display:block;margin-bottom:4px;color:var(--text-2);font-size:12px}
+
+/* 抽屉 */
+.drawer-mask{position:fixed;z-index:30;inset:0;background:rgba(24,32,27,.3);animation:fadeIn .15s}
+.drawer{position:fixed;z-index:31;top:0;right:0;width:560px;max-width:100%;height:100%;background:var(--surface);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:drawerIn .22s}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes drawerIn{from{transform:translateX(30px)}}
+.drawer-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:start}
+.drawer-body{flex:1;overflow-y:auto;padding:24px}
+.drawer-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.detail-group+.detail-group{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.detail-group h3{margin-bottom:12px}
+.detail-list{margin:0;display:grid;gap:6px}
+.detail-row{display:grid;grid-template-columns:120px 1fr;gap:12px}
+.detail-row dt{color:var(--text-2)}
+.detail-row dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* 统计图表 */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-card{padding:20px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface)}
+.chart-card h3{margin-bottom:16px}
+.bar-list{margin:0;padding:0;display:grid;gap:10px;list-style:none}
+.bar-label{margin-bottom:4px;display:flex;justify-content:space-between;gap:12px;font-size:13px}
+.bar-track{height:8px;border-radius:4px;overflow:hidden;background:var(--border)}
+.bar-fill{height:100%;background:var(--brand);border-radius:4px;transition:width .4s}
+
+/* 设置 */
+.setting-row{padding:16px 0;display:grid;grid-template-columns:1fr 1fr 120px;gap:12px;align-items:center;border-top:1px solid var(--border)}
+.setting-row:first-child{border-top:0}
+.tabs{margin-bottom:16px;display:flex;gap:2px;border-bottom:1px solid var(--border)}
+.tab{min-height:42px;padding:0 16px;border:0;border-bottom:2px solid transparent;background:transparent;font-weight:500}
+.tab[aria-selected=true]{border-color:var(--brand);color:var(--brand-active)}
+
+/* 移动端菜单 */
+.menu-toggle{display:none}
+
+/* ═══ 响应式 ═══ */
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr;gap:40px}
+  .query-grid{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .chart-grid{grid-template-columns:1fr}
+  .filter-bar{grid-template-columns:1fr 1fr}
+}
+@media(max-width:767px){
+  .topbar{height:56px}
+  .topbar-inner,.hero-inner,.trust-inner,.workspace{width:calc(100% - 32px)}
+  .hero-inner{min-height:auto;padding:48px 0}
+  h1{font-size:28px}
+  .hero-actions{flex-direction:column}
+  .hero-actions .btn{width:100%}
+  .trust-inner{grid-template-columns:1fr;padding:8px 0}
+  .trust-item{padding:16px 0;border-right:0;border-bottom:1px solid var(--border)}
+  .trust-item:last-child{border-bottom:0}
+  .panel{padding:20px 16px}
+  .field-grid,.choice-grid{grid-template-columns:1fr}
+  .actions{flex-direction:column-reverse}
+  .actions .btn{width:100%;min-height:48px}
+  .steps{display:none}
+  .admin-shell{display:block}
+  .admin-sidebar{position:fixed;z-index:20;left:0;transform:translateX(-100%);transition:transform .15s}
+  .admin-shell.menu-open .admin-sidebar{transform:translateX(0)}
+  .admin-header{padding:0 16px}
+  .admin-content{padding:20px 16px}
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .filter-bar{grid-template-columns:1fr}
+  .drawer{width:100%}
+  .menu-toggle{display:inline-flex}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     前台
+══════════════════════════════════════════════════════════ -->
+<div id="app-public">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 3L4 6v5.5c0 4.5 3 7.8 8 9.5 5-1.7 8-5 8-9.5V6l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span>凯叔讲故事 廉洁举报平台</span>
+      </div>
+      <nav class="nav-bar">
+        <button class="nav-btn" data-nav="home">首页</button>
+        <button class="nav-btn" data-nav="report">提交举报</button>
+        <button class="nav-btn" data-nav="query">查询进度</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero" id="view-home">
+      <div class="hero-inner">
+        <div>
+          <h1>安全、保密地提交问题线索</h1>
+          <p class="hero-copy">如您发现可能违反法律法规、公司制度或职业道德的行为，可通过本平台如实反映。我们将审慎受理每一条线索，并依法保护举报信息。</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" data-nav="report">提交举报</button>
+            <button class="btn btn-secondary btn-lg" data-nav="query">查询进度</button>
+          </div>
+        </div>
+        <aside class="promise">
+          <h2>保密承诺</h2>
+          <p>您的信息仅用于合规调查，由授权人员按需访问。</p>
+          <ul class="promise-list">
+            <li><span class="promise-icon"><svg class="icon" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><span><strong>严格控制访问</strong>仅限处理案件的授权人员查看</span></li>
+            <li><span class="promise-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.5 3 7.8 7.5 9.5 4.5-1.7 7.5-5 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-4"/></svg></span><span><strong>保护举报人权益</strong>禁止任何形式的打击报复</span></li>
+            <li><span class="promise-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></span><span><strong>可持续查询进度</strong>凭案件编号和查询码查看处理状态</span></li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 信任栏 -->
+    <section class="trust">
+      <div class="trust-inner">
+        <div class="trust-item"><strong>最小必要收集</strong><span>仅收集案件处理所需的信息</span></div>
+        <div class="trust-item"><strong>全过程留痕</strong><span>材料接收、处理和状态变化均记录</span></div>
+        <div class="trust-item"><strong>专属反馈</strong><span>凭编号和查询码查看处理状态</span></div>
+      </div>
+    </section>
+
+    <!-- 举报工作区 -->
+    <section class="workspace" id="view-report" hidden>
+      <div class="section-head">
+        <h2>提交举报</h2>
+        <p>请根据实际情况填写。标有"必填"的内容是受理线索所需的基本信息。</p>
+      </div>
+      <div class="wizard">
+        <!-- 步骤指示器 -->
+        <div class="steps" id="steps">
+          <div class="step active" data-step="1"><span class="step-dot">1</span><span>选择类型</span></div>
+          <div class="step" data-step="2"><span class="step-dot">2</span><span>事件信息</span></div>
+          <div class="step" data-step="3"><span class="step-dot">3</span><span>相关人员</span></div>
+          <div class="step" data-step="4"><span class="step-dot">4</span><span>上传材料</span></div>
+          <div class="step" data-step="5"><span class="step-dot">5</span><span>确认提交</span></div>
+        </div>
+
+        <form id="report-form" novalidate>
+          <!-- Step 1: 选择类型 -->
+          <div class="panel" data-step="1">
+            <h2>1 选择问题类型</h2>
+            <p style="color:var(--text-2);margin-bottom:20px">请选择最符合您所反映问题的类型。</p>
+            <fieldset class="field">
+              <div class="choice-grid" id="category-grid"></div>
+              <p class="err" id="category-err"></p>
+            </fieldset>
+            <div class="actions"><span></span><button type="button" class="btn btn-primary" data-next="2">保存并继续</button></div>
+          </div>
+
+          <!-- Step 2: 事件信息 -->
+          <div class="panel" data-step="2" hidden>
+            <h2>2 填写事件信息</h2>
+            <p style="color:var(--text-2);margin-bottom:20px">请尽量说明时间、地点、经过和可核实的细节。</p>
+            <div class="field-grid">
+              <div class="field"><label class="label" for="occurred-at">事发日期 <span class="req">*</span></label><input id="occurred-at" type="date"><p class="err" id="occurred-at-err"></p></div>
+              <div class="field"><label class="label" for="event-location">发生地点</label><input id="event-location" type="text" maxlength="200" placeholder="请输入地点或线上渠道"></div>
+            </div>
+            <div class="field"><label class="label" for="event-desc">事件描述 <span class="req">*</span></label><textarea id="event-desc" minlength="10" maxlength="20000" placeholder="请说明事件经过、涉及行为及您了解的信息。"></textarea><p class="help">至少 10 个字，最多 20,000 字。</p><p class="err" id="event-desc-err"></p></div>
+            <div class="actions"><button type="button" class="btn btn-secondary" data-prev="1">上一步</button><button type="button" class="btn btn-primary" data-next="3">保存并继续</button></div>
+          </div>
+
+          <!-- Step 3: 相关人员 -->
+          <div class="panel" data-step="3" hidden>
+            <h2>3 补充相关人员</h2>
+            <p style="color:var(--text-2);margin-bottom:20px">请根据对象身份填写必要信息；不知道的内容可以留空。</p>
+            <fieldset class="field">
+              <div class="choice-grid">
+                <div class="choice"><input type="radio" id="sub-internal" name="subjectType" value="internal_employee" checked><label for="sub-internal">内部员工</label></div>
+                <div class="choice"><input type="radio" id="sub-partner" name="subjectType" value="partner"><label for="sub-partner">合作伙伴</label></div>
+              </div>
+            </fieldset>
+            <div class="sub-panel" id="internal-fields">
+              <h3>内部员工</h3>
+              <div class="field-grid">
+                <div class="field"><label class="label" for="internal-name">姓名 <span class="req">*</span></label><input id="internal-name" type="text" maxlength="100" placeholder="请输入姓名"></div>
+                <div class="field"><label class="label" for="internal-dept">部门</label><input id="internal-dept" type="text" maxlength="100" placeholder="请输入部门"></div>
+                <div class="field"><label class="label" for="internal-pos">职务/岗位</label><input id="internal-pos" type="text" maxlength="100" placeholder="请输入职务或岗位"></div>
+              </div>
+            </div>
+            <div class="sub-panel" id="partner-fields" hidden>
+              <h3>合作伙伴</h3>
+              <div class="field-grid">
+                <div class="field"><label class="label" for="partner-org">企业/机构名称 <span class="req">*</span></label><input id="partner-org" type="text" maxlength="200" placeholder="请输入企业或机构名称"></div>
+                <div class="field"><label class="label" for="partner-contact">联系人</label><input id="partner-contact" type="text" maxlength="100" placeholder="请输入联系人"></div>
+                <div class="field"><label class="label" for="partner-project">合作业务/项目</label><input id="partner-project" type="text" maxlength="200" placeholder="请输入合作业务或项目"></div>
+              </div>
+            </div>
+            <div class="subsection">
+              <h3>举报人信息</h3>
+              <p style="color:var(--text-2);margin-bottom:16px">您可以匿名举报；如选择实名，身份信息将单独加密保存。</p>
+              <fieldset class="field">
+                <div class="choice-grid">
+                  <div class="choice"><input type="radio" id="rep-anon" name="reporterMode" value="anonymous" checked><label for="rep-anon">匿名举报</label></div>
+                  <div class="choice"><input type="radio" id="rep-id" name="reporterMode" value="identified"><label for="rep-id">实名举报</label></div>
+                </div>
+              </fieldset>
+              <div class="field-grid" id="reporter-fields" hidden>
+                <div class="field"><label class="label" for="rep-name">姓名 <span class="req">*</span></label><input id="rep-name" type="text" maxlength="100" autocomplete="name"></div>
+                <div class="field"><label class="label" for="rep-contact">联系方式 <span class="req">*</span></label><input id="rep-contact" type="text" maxlength="200" autocomplete="tel"></div>
+              </div>
+            </div>
+            <div class="actions"><button type="button" class="btn btn-secondary" data-prev="2">上一步</button><button type="button" class="btn btn-primary" data-next="4">保存并继续</button></div>
+          </div>
+
+          <!-- Step 4: 上传材料 -->
+          <div class="panel" data-step="4" hidden>
+            <h2>4 上传证明材料</h2>
+            <p style="color:var(--text-2);margin-bottom:20px">支持图片、文档、音视频等材料；请确保材料来源合法。</p>
+            <div class="upload-zone" id="upload-zone">
+              <div class="upload-icon"><svg class="icon-lg" viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></div>
+              <p><button type="button" class="btn btn-secondary" id="choose-files">选择文件</button> 或拖到此处</p>
+              <p class="help">单个文件不超过 100MB，最多 10 个。支持图片、Office、PDF、音视频。</p>
+              <input type="file" id="file-input" multiple hidden accept=".bmp,.doc,.docx,.gif,.heic,.jpeg,.jpg,.m4a,.mov,.mp3,.mp4,.mpeg,.mpg,.ogg,.pdf,.png,.ppt,.pptx,.tif,.tiff,.txt,.wav,.webm,.webp,.xls,.xlsx">
+            </div>
+            <ul class="upload-list" id="upload-list"></ul>
+            <div class="notice notice-warning"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2.8 19h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/></svg><span><strong>提示：</strong>请勿上传可执行程序或来源不明的文件。</span></div>
+            <div class="actions"><button type="button" class="btn btn-secondary" data-prev="3">上一步</button><button type="button" class="btn btn-primary" data-next="5">保存并继续</button></div>
+          </div>
+
+          <!-- Step 5: 确认提交 -->
+          <div class="panel" data-step="5" hidden>
+            <h2>5 确认并提交</h2>
+            <p style="color:var(--text-2);margin-bottom:20px">提交前请核对关键信息。您仍可返回前面步骤修改。</p>
+            <dl class="detail-list" id="review-list"></dl>
+            <label style="margin-top:20px;display:flex;gap:10px;align-items:flex-start;cursor:pointer">
+              <input type="checkbox" id="consent" style="width:18px;height:18px;margin-top:2px;accent-color:var(--brand)">
+              <span style="font-size:13px">我确认以上内容基于本人了解的事实，并同意平台为受理和调查目的处理所提交的信息及材料。</span>
+            </label>
+            <p class="err" id="consent-err"></p>
+            <div class="actions"><button type="button" class="btn btn-secondary" data-prev="4">上一步</button><button type="submit" class="btn btn-primary" id="submit-btn">提交举报</button></div>
+          </div>
+        </form>
+
+        <!-- 回执 -->
+        <div class="panel receipt" id="receipt" hidden>
+          <div class="receipt-icon"><svg class="icon-lg" viewBox="0 0 24 24" style="width:32px;height:32px"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></div>
+          <h2>举报已提交</h2>
+          <p style="color:var(--text-2)">平台已收到您的线索。请妥善保存下列查询信息。</p>
+          <div class="receipt-box">
+            <div class="detail-row"><dt>案件编号</dt><dd class="receipt-code" id="receipt-case-no"></dd></div>
+            <div class="detail-row"><dt>查询码</dt><dd class="receipt-code" id="receipt-query-code"></dd></div>
+            <div class="detail-row"><dt>提交时间</dt><dd id="receipt-time"></dd></div>
+            <p class="receipt-warn">查询码仅在本次提交成功后展示，关闭页面前请复制保存，平台无法为您找回。</p>
+          </div>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-primary" id="copy-receipt">复制查询信息</button>
+            <button class="btn btn-secondary" data-nav="query">去查询进度</button>
+            <button class="btn btn-secondary" id="new-report">新建举报</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 查询 -->
+    <section class="workspace" id="view-query" hidden>
+      <div class="section-head">
+        <h2>举报查询</h2>
+        <p>请输入提交成功时获得的案件编号和查询码。</p>
+      </div>
+      <div class="query-grid">
+        <form class="panel" id="query-form" novalidate>
+          <div class="field"><label class="label" for="q-case-no">案件编号 <span class="req">*</span></label><input id="q-case-no" type="text" maxlength="40" autocomplete="off" placeholder="例如 KS-20260805-000001"></div>
+          <div class="field"><label class="label" for="q-code">查询码 <span class="req">*</span></label><input id="q-code" type="text" maxlength="128" autocomplete="off" placeholder="请输入查询码"></div>
+          <button type="submit" class="btn btn-primary" style="width:100%">查询</button>
+        </form>
+        <div class="panel" id="query-result">
+          <div class="empty" id="query-empty">输入案件编号和查询码后查看处理状态</div>
+          <div id="query-content" hidden></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer style="padding:28px 16px;text-align:center;color:var(--text-2);border-top:1px solid var(--border);background:var(--surface);font-size:12px">
+    凯叔讲故事廉洁举报平台 · 依法保护举报人权益
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     管理后台
+══════════════════════════════════════════════════════════ -->
+<div id="app-admin">
+  <!-- 登录页 -->
+  <div class="admin-login" id="admin-login">
+    <div class="admin-login-box">
+      <div class="admin-login-brand">
+        <span class="brand-mark"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3L4 6v5.5c0 4.5 3 7.8 8 9.5 5-1.7 8-5 8-9.5V6l-8-3z"/><path d="m9 12 2 2 4-4"/></svg></span>
+        <span>管理后台</span>
+      </div>
+      <form id="login-form">
+        <div class="field"><label class="label" for="login-user">用户名</label><input id="login-user" type="text" autocomplete="username" required></div>
+        <div class="field"><label class="label" for="login-pass">密码</label><input id="login-pass" type="password" autocomplete="current-password" required></div>
+        <p class="err" id="login-err"></p>
+        <button type="submit" class="btn btn-primary btn-lg">登录</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 管理界面 -->
+  <div class="admin-shell" id="admin-shell" hidden>
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-brand">
+        <span class="brand-mark"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3L4 6v5.5c0 4.5 3 7.8 8 9.5 5-1.7 8-5 8-9.5V6l-8-3z"/><path d="m9 12 2 2 4-4"/></svg></span>
+        <span>廉洁举报平台</span>
+      </div>
+      <div class="admin-nav-section">工作台</div>
+      <nav class="admin-nav">
+        <button class="admin-nav-item" data-admin-page="dashboard"><svg class="icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>工作台</button>
+        <button class="admin-nav-item" data-admin-page="reports"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>工单管理</button>
+      </nav>
+      <div class="admin-nav-section">调查审批</div>
+      <nav class="admin-nav">
+        <button class="admin-nav-item" data-admin-page="tasks"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>调查任务</button>
+        <button class="admin-nav-item" data-admin-page="statistics"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>统计分析</button>
+      </nav>
+      <div class="admin-nav-section">系统</div>
+      <nav class="admin-nav">
+        <button class="admin-nav-item" data-admin-page="settings"><svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>系统管理</button>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <strong id="admin-user-name">管理员</strong>
+        <span id="admin-user-role">角色</span>
+      </div>
+    </aside>
+    <div class="admin-main">
+      <header class="admin-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-secondary btn-sm menu-toggle" id="menu-toggle"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
+          <h1 id="admin-title">工作台</h1>
+        </div>
+        <div class="admin-header-actions">
+          <button class="btn btn-text btn-sm" id="admin-logout">退出</button>
+        </div>
+      </header>
+      <div class="admin-content" id="admin-content"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// 全局状态
+// ════════════════════════════════════════════════════════════
+const CATEGORIES = [
+  '贿赂、回扣或其他腐败行为',
+  '利益冲突',
+  '侵占或挪用公司财产、资金或资产',
+  '虚假报销或其他违反财务制度的行为',
+  '泄露商业秘密、个人信息或滥用系统权限',
+  '性骚扰、骚扰、霸凌或歧视',
+  '其他违反法律法规或公司规定的行为',
+];
+
+const STATUS_MAP = {
+  pending: {label:'已接收',cls:'badge-warning'},
+  accepted: {label:'已受理',cls:'badge-info'},
+  investigating: {label:'调查中',cls:'badge-info'},
+  pending_approval: {label:'审批中',cls:'badge-info'},
+  closed: {label:'已办结',cls:'badge-success'},
+  not_accepted: {label:'未受理',cls:'badge-danger'},
+};
+
+let adminState = { csrfToken: '', user: null, currentPage: 'dashboard' };
+let reportState = { step: 1, data: {}, attachments: [] };
+
+// ════════════════════════════════════════════════════════════
+// 工具函数
+// ════════════════════════════════════════════════════════════
+function $(sel, root=document){return root.querySelector(sel)}
+function $$(sel, root=document){return [...root.querySelectorAll(sel)]}
+function fmtDate(s){if(!s)return'-';const d=new Date(s);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function fmtSize(b){if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';return(b/1048576).toFixed(1)+'MB'}
+
+async function api(path, opts={}){
+  const headers = { 'content-type':'application/json', ...(opts.headers||{}) };
+  if (adminState.csrfToken && opts.method && opts.method !== 'GET') {
+    headers['x-csrf-token'] = adminState.csrfToken;
+  }
+  const res = await fetch(path, { ...opts, headers });
+  const data = await res.json().catch(()=>({error:{code:'PARSE_ERROR',message:'响应解析失败'}}));
+  if (!res.ok) throw data.error || {code:'ERROR',message:'请求失败'};
+  return data;
+}
+
+function toast(msg, type='info'){
+  const wrap = $('#toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = `<span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(20px)';setTimeout(()=>el.remove(),200)},3000);
+}
+
+// ════════════════════════════════════════════════════════════
+// 前台导航
+// ════════════════════════════════════════════════════════════
+function showView(name){
+  $$('[id^=view-]').forEach(el=>el.hidden=true);
+  const target = $('#view-'+name);
+  if (target){target.hidden=false;target.scrollIntoView({behavior:'smooth'})}
+  $$('[data-nav]').forEach(btn=>btn.removeAttribute('aria-current'));
+  $$(`[data-nav="${name}"]`).forEach(btn=>btn.setAttribute('aria-current','true'));
+}
+
+document.addEventListener('click', e=>{
+  const navBtn = e.target.closest('[data-nav]');
+  if (navBtn){
+    showView(navBtn.dataset.nav);
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// 前台：举报向导
+// ════════════════════════════════════════════════════════════
+function initReportWizard(){
+  // 渲染分类选项
+  const grid = $('#category-grid');
+  grid.innerHTML = CATEGORIES.map((c,i)=>`
+    <div class="choice"><input type="radio" id="cat-${i}" name="category" value="${c}"><label for="cat-${i}">${c}</label></div>
+  `).join('');
+
+  // 对象类型切换
+  $('input[name=subjectType]').forEach?.(()=>{});
+  $$('input[name=subjectType]').forEach(r=>r.addEventListener('change',()=>{
+    $('#internal-fields').hidden = r.value !== 'internal_employee' && r.checked ? true : !r.checked ? $('#internal-fields').hidden : false;
+  }));
+  // 简化：直接绑定
+  $('#sub-internal').addEventListener('change',()=>{$('#internal-fields').hidden=false;$('#partner-fields').hidden=true});
+  $('#sub-partner').addEventListener('change',()=>{$('#internal-fields').hidden=true;$('#partner-fields').hidden=false});
+
+  // 举报方式切换
+  $('#rep-anon').addEventListener('change',()=>{$('#reporter-fields').hidden=true});
+  $('#rep-id').addEventListener('change',()=>{$('#reporter-fields').hidden=false});
+
+  // 步骤导航
+  $$('[data-next]').forEach(btn=>btn.addEventListener('click',()=>goStep(+btn.dataset.next)));
+  $$('[data-prev]').forEach(btn=>btn.addEventListener('click',()=>goStep(+btn.dataset.prev)));
+
+  // 上传
+  const fileInput = $('#file-input');
+  const uploadZone = $('#upload-zone');
+  $('#choose-files').addEventListener('click',()=>fileInput.click());
+  uploadZone.addEventListener('click',e=>{if(e.target===uploadZone||e.target.closest('.upload-icon'))fileInput.click()});
+  fileInput.addEventListener('change',()=>handleFiles(fileInput.files));
+  ['dragover','dragenter'].forEach(ev=>uploadZone.addEventListener(ev,e=>{e.preventDefault();uploadZone.classList.add('dragging')}));
+  ['dragleave','drop'].forEach(ev=>uploadZone.addEventListener(ev,e=>{e.preventDefault();uploadZone.classList.remove('dragging')}));
+  uploadZone.addEventListener('drop',e=>{e.preventDefault();handleFiles(e.dataTransfer.files)});
+
+  // 提交
+  $('#report-form').addEventListener('submit',submitReport);
+  $('#copy-receipt').addEventListener('click',copyReceipt);
+  $('#new-report').addEventListener('click',resetWizard);
+}
+
+function goStep(n){
+  reportState.step = n;
+  $$('#report-form .panel[data-step]').forEach(p=>p.hidden = +p.dataset.step !== n);
+  $$('#steps .step').forEach(s=>{
+    const sn = +s.dataset.step;
+    s.classList.toggle('active',sn===n);
+    s.classList.toggle('done',sn<n);
+  });
+  if (n===5) renderReview();
+  $('#view-report').scrollIntoView({behavior:'smooth'});
+}
+
+function validateStep(n){
+  if (n===1){
+    const cat = $('input[name=category]:checked');
+    if(!cat){$('#category-err').textContent='请选择问题类型';return false}
+    $('#category-err').textContent='';
+    reportState.data.category = cat.value;
+  }
+  if (n===2){
+    const desc = $('#event-desc').value.trim();
+    if(desc.length<10){$('#event-desc-err').textContent='事件描述至少 10 个字';return false}
+    $('#event-desc-err').textContent='';
+    reportState.data.event = {
+      occurredAt: $('#occurred-at').value,
+      location: $('#event-location').value.trim(),
+      description: desc,
+    };
+  }
+  if (n===3){
+    const type = $('input[name=subjectType]:checked').value;
+    if (type==='internal_employee'){
+      const name = $('#internal-name').value.trim();
+      if(!name){toast('请填写被举报人姓名','error');return false}
+      reportState.data.subject = {type, name, department:$('#internal-dept').value.trim(), position:$('#internal-pos').value.trim()};
+    } else {
+      const org = $('#partner-org').value.trim();
+      if(!org){toast('请填写企业名称','error');return false}
+      reportState.data.subject = {type:'partner', organizationName:org, contact:$('#partner-contact').value.trim(), project:$('#partner-project').value.trim()};
+    }
+    const mode = $('input[name=reporterMode]:checked').value;
+    if (mode==='identified'){
+      const name=$('#rep-name').value.trim(), contact=$('#rep-contact').value.trim();
+      if(!name||!contact){toast('请填写举报人姓名和联系方式','error');return false}
+      reportState.data.reporter = {mode, name, contact};
+    } else {
+      reportState.data.reporter = {mode:'anonymous'};
+    }
+  }
+  return true;
+}
+
+// 覆盖 data-next 的 click 处理
+document.addEventListener('click', e=>{
+  const nextBtn = e.target.closest('[data-next]');
+  const prevBtn = e.target.closest('[data-prev]');
+  if (nextBtn && !nextBtn.dataset.bound){
+    // 已经在上面绑定过了
+  }
+}, true);
+
+// 重新绑定步骤导航（覆盖默认）
+function rebindSteps(){
+  $$('[data-next]').forEach(btn=>{
+    btn.onclick = null;
+    btn.addEventListener('click', ()=>{
+      const n = +btn.dataset.next;
+      if (validateStep(n-1)) goStep(n);
+    }, {once:false});
+  });
+  $$('[data-prev]').forEach(btn=>{
+    btn.onclick = null;
+    btn.addEventListener('click', ()=>goStep(+btn.dataset.prev));
+  });
+}
+
+async function handleFiles(files){
+  for (const file of files){
+    if (reportState.attachments.length >= 10){toast('最多上传 10 个文件','error');break}
+    await uploadFile(file);
+  }
+}
+
+async function uploadFile(file){
+  const item = document.createElement('li');
+  item.className = 'upload-item';
+  item.innerHTML = `<div class="upload-item-name"><svg class="icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><strong>${file.name}</strong></div><div class="upload-item-meta">上传中...</div>`;
+  $('#upload-list').appendChild(item);
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/public/uploads', {method:'POST', body:fd});
+    const data = await res.json();
+    if (!res.ok) throw data.error;
+    const att = data.attachments[0];
+    reportState.attachments.push(att.id);
+    item.querySelector('.upload-item-meta').textContent = fmtSize(att.size) + ' · 已上传';
+    item.innerHTML += `<button type="button" class="btn btn-text btn-sm" data-remove="${att.id}">移除</button>`;
+    item.querySelector('[data-remove]').addEventListener('click',()=>{
+      reportState.attachments = reportState.attachments.filter(id=>id!==att.id);
+      item.remove();
+    });
+  } catch(err){
+    item.querySelector('.upload-item-meta').textContent = '失败';
+    toast('上传失败: '+(err.message||'未知错误'),'error');
+  }
+}
+
+function renderReview(){
+  const d = reportState.data;
+  const subjectText = d.subject?.type === 'internal_employee'
+    ? [d.subject.name, d.subject.department, d.subject.position].filter(Boolean).join(' / ')
+    : [d.subject?.organizationName, d.subject?.contact, d.subject?.project].filter(Boolean).join(' / ');
+  const reporterText = d.reporter?.mode === 'identified'
+    ? `${d.reporter.name} / ${d.reporter.contact}` : '匿名举报';
+  const html = `
+    <div class="detail-group"><h3>问题类型</h3><div class="detail-list"><div class="detail-row"><dt>类型</dt><dd>${d.category||'-'}</dd></div></div></div>
+    <div class="detail-group"><h3>事件信息</h3><div class="detail-list">
+      <div class="detail-row"><dt>事发日期</dt><dd>${d.event?.occurredAt||'-'}</dd></div>
+      <div class="detail-row"><dt>地点</dt><dd>${d.event?.location||'-'}</dd></div>
+      <div class="detail-row"><dt>描述</dt><dd>${d.event?.description||'-'}</dd></div>
+    </div></div>
+    <div class="detail-group"><h3>被举报对象</h3><div class="detail-list"><div class="detail-row"><dt>${d.subject?.type==='internal_employee'?'员工':'合作伙伴'}</dt><dd>${subjectText}</dd></div></div></div>
+    <div class="detail-group"><h3>举报人</h3><div class="detail-list"><div class="detail-row"><dt>方式</dt><dd>${reporterText}</dd></div></div></div>
+    <div class="detail-group"><h3>附件</h3><div class="detail-list"><div class="detail-row"><dt>数量</dt><dd>${reportState.attachments.length} 个文件</dd></div></div></div>
+  `;
+  $('#review-list').innerHTML = html;
+}
+
+async function submitReport(e){
+  e.preventDefault();
+  if (!$('#consent').checked){$('#consent-err').textContent='请勾选确认';return}
+  $('#consent-err').textContent='';
+  const btn = $('#submit-btn');
+  btn.disabled = true; btn.textContent = '提交中...';
+  try {
+    const payload = {
+      category: reportState.data.category,
+      event: reportState.data.event,
+      subject: reportState.data.subject,
+      reporter: reportState.data.reporter,
+      consent: true,
+      attachmentIds: reportState.attachments,
+    };
+    const res = await api('/api/public/reports', {method:'POST', body:JSON.stringify(payload)});
+    $('#receipt-case-no').textContent = res.case_no;
+    $('#receipt-query-code').textContent = res.query_code;
+    $('#receipt-time').textContent = fmtDate(res.submitted_at);
+    $$('#report-form .panel').forEach(p=>p.hidden=true);
+    $('#receipt').hidden = false;
+    toast('举报提交成功','success');
+  } catch(err){
+    toast('提交失败: '+(err.message||'未知错误'),'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '提交举报';
+  }
+}
+
+function copyReceipt(){
+  const text = `案件编号: ${$('#receipt-case-no').textContent}\n查询码: ${$('#receipt-query-code').textContent}\n提交时间: ${$('#receipt-time').textContent}`;
+  navigator.clipboard.writeText(text).then(()=>toast('已复制到剪贴板','success'));
+}
+
+function resetWizard(){
+  reportState = {step:1, data:{}, attachments:[]};
+  $('#report-form').reset();
+  $('#receipt').hidden = true;
+  $('#upload-list').innerHTML = '';
+  $('#internal-fields').hidden = false;
+  $('#partner-fields').hidden = true;
+  $('#reporter-fields').hidden = true;
+  goStep(1);
+}
+
+// ════════════════════════════════════════════════════════════
+// 前台：查询
+// ════════════════════════════════════════════════════════════
+function initQuery(){
+  $('#query-form').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const caseNo = $('#q-case-no').value.trim();
+    const code = $('#q-code').value.trim();
+    if(!caseNo||!code){toast('请填写案件编号和查询码','error');return}
+    try {
+      const res = await api('/api/public/query', {method:'POST', body:JSON.stringify({caseNo, queryCode:code})});
+      renderQueryResult(res, caseNo, code);
+    } catch(err){
+      toast(err.message||'查询失败','error');
+      $('#query-content').hidden = true;
+      $('#query-empty').hidden = false;
+      $('#query-empty').textContent = err.message || '查询失败';
+    }
+  });
+}
+
+function renderQueryResult(data, caseNo, code){
+  const status = STATUS_MAP[data.status] || {label:'未知',cls:'badge-muted'};
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div><h3 style="margin:0">${data.case_no}</h3><p style="margin:4px 0 0;color:var(--text-2);font-size:13px">${data.category}</p></div>
+      <span class="badge ${status.cls}">${data.status_label}</span>
+    </div>
+    <div style="margin-bottom:20px">
+      <h3 style="font-size:14px;margin-bottom:12px">处理进度</h3>
+      <ul class="timeline">
+        ${data.timeline.map(t=>`<li><strong>${t.title}</strong><p>${t.message}</p><time>${fmtDate(t.created_at)}</time></li>`).join('')}
+      </ul>
+    </div>
+  `;
+  if (data.clues && data.clues.length > 0){
+    html += `<div><h3 style="font-size:14px;margin-bottom:8px">补充线索 (${data.clues.length})</h3><ul class="clue-list">${data.clues.map(c=>`<li><p>${c.content}</p><time>${fmtDate(c.created_at)}</time></li>`).join('')}</ul></div>`;
+  }
+  if (data.status !== 'closed' && data.status !== 'not_accepted'){
+    html += `
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+        <h3 style="font-size:14px;margin-bottom:12px">补充线索</h3>
+        <textarea id="clue-input" maxlength="10000" placeholder="请输入补充线索内容..." style="min-height:100px"></textarea>
+        <button class="btn btn-primary btn-sm" id="add-clue" style="margin-top:8px">提交线索</button>
+      </div>
+    `;
+  }
+  $('#query-empty').hidden = true;
+  $('#query-content').hidden = false;
+  $('#query-content').innerHTML = html;
+  const addBtn = $('#add-clue');
+  if (addBtn){
+    addBtn.addEventListener('click', async()=>{
+      const content = $('#clue-input').value.trim();
+      if(content.length<5){toast('线索内容至少 5 个字','error');return}
+      try {
+        await api('/api/public/clues', {method:'POST', body:JSON.stringify({caseNo, queryCode:code, content})});
+        toast('线索已提交','success');
+        // 重新查询
+        $('#query-form').dispatchEvent(new Event('submit'));
+      } catch(err){toast(err.message||'提交失败','error')}
+    });
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// 管理后台
+// ════════════════════════════════════════════════════════════
+function checkAdminRoute(){
+  if (location.hash === '#admin'){
+    document.body.classList.add('admin-mode');
+    initAdmin();
+  } else {
+    document.body.classList.remove('admin-mode');
+  }
+}
+window.addEventListener('hashchange', checkAdminRoute);
+// 快捷键 Ctrl+Shift+A 进入后台
+document.addEventListener('keydown', e=>{
+  if (e.ctrlKey && e.shiftKey && e.key === 'A'){ location.hash = 'admin'; }
+});
+
+async function initAdmin(){
+  // 检查会话
+  try {
+    const res = await api('/api/admin/session');
+    adminState.user = res.user;
+    showAdminShell();
+  } catch {
+    showAdminLogin();
+  }
+}
+
+function showAdminLogin(){
+  $('#admin-login').hidden = false;
+  $('#admin-shell').hidden = true;
+  $('#login-form').addEventListener('submit', adminLogin, {once:true});
+}
+
+async function adminLogin(e){
+  e.preventDefault();
+  const username = $('#login-user').value.trim();
+  const password = $('#login-pass').value;
+  $('#login-err').textContent = '';
+  try {
+    const res = await api('/api/admin/login', {method:'POST', body:JSON.stringify({username, password})});
+    adminState.csrfToken = res.csrf_token;
+    adminState.user = res.user;
+    showAdminShell();
+    toast('登录成功','success');
+  } catch(err){
+    $('#login-err').textContent = err.message || '登录失败';
+  }
+}
+
+function showAdminShell(){
+  $('#admin-login').hidden = true;
+  $('#admin-shell').hidden = false;
+  $('#admin-user-name').textContent = adminState.user.name;
+  $('#admin-user-role').textContent = adminState.user.roles.map(r=>({system_admin:'系统管理员',case_manager:'案件管理',investigator:'调查员',approver:'审批人'}[r])).join('、');
+  // 导航
+  $$('[data-admin-page]').forEach(btn=>{
+    btn.addEventListener('click', ()=>navigateAdmin(btn.dataset.adminPage));
+  });
+  $('#admin-logout').addEventListener('click', adminLogout);
+  $('#menu-toggle').addEventListener('click', ()=>$('#admin-shell').classList.toggle('menu-open'));
+  navigateAdmin('dashboard');
+}
+
+async function adminLogout(){
+  try { await api('/api/admin/logout', {method:'POST'}); } catch {}
+  adminState = {csrfToken:'',user:null,currentPage:'dashboard'};
+  showAdminLogin();
+  toast('已退出','success');
+}
+
+function navigateAdmin(page){
+  adminState.currentPage = page;
+  $$('[data-admin-page]').forEach(btn=>btn.setAttribute('aria-current', btn.dataset.adminPage===page));
+  const titles = {dashboard:'工作台',reports:'工单管理',tasks:'调查任务',statistics:'统计分析',settings:'系统管理'};
+  $('#admin-title').textContent = titles[page] || page;
+  $('#admin-shell').classList.remove('menu-open');
+  const loaders = {dashboard:loadDashboard,reports:loadReports,tasks:loadTasks,statistics:loadStatistics,settings:loadSettings};
+  (loaders[page]||(()=>{}))();
+}
+
+// ─── 工作台 ───
+async function loadDashboard(){
+  $('#admin-content').innerHTML = `<div class="kpi-grid" id="kpi-grid"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px"><div><h2 style="font-size:18px;margin-bottom:16px">待办工单</h2><div id="todo-list"></div></div><div><h2 style="font-size:18px;margin-bottom:16px">最近工单</h2><div id="recent-list"></div></div></div>`;
+  try {
+    const res = await api('/api/admin/dashboard');
+    const s = res.stats;
+    $('#kpi-grid').innerHTML = `
+      <div class="kpi"><div class="kpi-label">全部工单</div><div class="kpi-value">${s.total}</div><div class="kpi-trend">本周新增 ${s.week_new}</div></div>
+      <div class="kpi"><div class="kpi-label">待受理</div><div class="kpi-value">${s.pending}</div><div class="kpi-trend">今日新增 ${s.today_new}</div></div>
+      <div class="kpi"><div class="kpi-label">调查中</div><div class="kpi-value">${s.investigating}</div></div>
+      <div class="kpi"><div class="kpi-label">待审批</div><div class="kpi-value">${s.pending_approval}</div></div>
+    `;
+    const renderList = (items, container) => {
+      if(!items.length){container.innerHTML='<div class="empty">暂无数据</div>';return}
+      container.innerHTML = items.map(r=>{
+        const st = STATUS_MAP[r.status]||{label:'未知',cls:'badge-muted'};
+        return `<div style="padding:12px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="openReportDetail('${r.id}')">
+          <div><div class="td-main">${r.case_no}</div><div class="td-sub">${r.category} · ${r.subject_name}</div></div>
+          <span class="badge ${st.cls}">${r.status_label}</span>
+        </div>`;
+      }).join('');
+    };
+    renderList(res.todo, $('#todo-list'));
+    renderList(res.recent, $('#recent-list'));
+  } catch(err){toast(err.message||'加载失败','error')}
+}
+
+// ─── 工单管理 ───
+let reportFilters = {status:'',category:'',q:'',page:1,pageSize:20};
+
+async function loadReports(){
+  $('#admin-content').innerHTML = `
+    <div class="filter-bar">
+      <div><label>搜索</label><input type="text" id="f-q" placeholder="案件编号/类型/姓名" value="${reportFilters.q}"></div>
+      <div><label>状态</label><select id="f-status"><option value="">全部</option>${Object.entries(STATUS_MAP).map(([k,v])=>`<option value="${k}" ${reportFilters.status===k?'selected':''}>${v.label}</option>`).join('')}</select></div>
+      <div><label>类型</label><select id="f-category"><option value="">全部</option>${CATEGORIES.map(c=>`<option ${reportFilters.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div></div>
+      <div><button class="btn btn-primary btn-sm" id="f-search">查询</button></div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><span id="reports-count"></span></div>
+      <div class="tbl-scroll"><table><thead><tr><th>案件编号</th><th>类型</th><th>被举报对象</th><th>状态</th><th>举报方式</th><th>提交时间</th></tr></thead><tbody id="reports-tbody"></tbody></table></div>
+      <div class="pagination" id="reports-pager"></div>
+    </div>
+  `;
+  $('#f-search').addEventListener('click',()=>{
+    reportFilters.q=$('#f-q').value.trim();
+    reportFilters.status=$('#f-status').value;
+    reportFilters.category=$('#f-category').value;
+    reportFilters.page=1;
+    fetchReports();
+  });
+  fetchReports();
+}
+
+async function fetchReports(){
+  const params = new URLSearchParams();
+  if(reportFilters.q)params.set('q',reportFilters.q);
+  if(reportFilters.status)params.set('status',reportFilters.status);
+  if(reportFilters.category)params.set('category',reportFilters.category);
+  params.set('page',reportFilters.page);
+  params.set('pageSize',reportFilters.pageSize);
+  try {
+    const res = await api('/api/admin/reports?'+params);
+    $('#reports-count').textContent = `共 ${res.total} 条`;
+    const tbody = $('#reports-tbody');
+    if(!res.items.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-2)">暂无数据</td></tr>';return}
+    tbody.innerHTML = res.items.map(r=>{
+      const st = STATUS_MAP[r.status]||{label:'未知',cls:'badge-muted'};
+      return `<tr style="cursor:pointer" onclick="openReportDetail('${r.id}')">
+        <td class="td-main">${r.case_no}</td>
+        <td>${r.category}</td>
+        <td>${r.subject_name}</td>
+        <td><span class="badge ${st.cls}">${r.status_label}</span></td>
+        <td>${r.reporter_mode==='identified'?'实名':'匿名'}</td>
+        <td class="td-sub">${fmtDate(r.created_at)}</td>
+      </tr>`;
+    }).join('');
+    // 分页
+    const pager = $('#reports-pager');
+    if(res.totalPages>1){
+      let html='';
+      for(let i=1;i<=res.totalPages;i++){
+        html+=`<button class="btn btn-sm ${i===res.page?'btn-primary':'btn-secondary'}" onclick="reportFilters.page=${i};fetchReports()">${i}</button>`;
+      }
+      pager.innerHTML=html;
+    } else {pager.innerHTML=''}
+  } catch(err){toast(err.message||'加载失败','error')}
+}
+
+window.fetchReports = fetchReports;
+window.reportFilters = reportFilters;
+
+// ─── 工单详情 ───
+window.openReportDetail = async function(id){
+  try {
+    const r = await api('/api/admin/reports/'+id);
+    const st = STATUS_MAP[r.status]||{label:'未知',cls:'badge-muted'};
+    const subjectText = r.subject?.type==='internal_employee'
+      ? [r.subject.name,r.subject.department,r.subject.position].filter(Boolean).join(' / ')||'(未填写)'
+      : [r.subject?.organization_name,r.subject?.contact,r.subject?.project].filter(Boolean).join(' / ')||'(未填写)';
+    const canAccept = r.status==='pending';
+    const canReject = r.status==='pending';
+    const canInvestigate = r.status==='accepted';
+    const canSubmitApproval = r.status==='investigating';
+    const canApprove = r.status==='pending_approval';
+    const canReturn = r.status==='pending_approval';
+
+    const overlay = document.createElement('div');
+    overlay.innerHTML = `
+      <div class="drawer-mask"></div>
+      <div class="drawer">
+        <div class="drawer-head">
+          <div><h2 style="margin:0">${r.case_no}</h2><p style="margin:4px 0 0;color:var(--text-2)">${r.category}</p></div>
+          <button class="btn btn-text" onclick="this.closest('.drawer-mask, .drawer').parentElement.innerHTML=''">✕</button>
+        </div>
+        <div class="drawer-body">
+          <div style="display:flex;gap:8px;margin-bottom:20px">
+            <span class="badge ${st.cls}">${r.status_label}</span>
+            ${r.has_identity?'<span class="badge badge-info">有实名信息</span>':'<span class="badge badge-muted">匿名</span>'}
+            ${r.priority==='high'?'<span class="badge badge-warning">高优先级</span>':''}
+            ${r.priority==='urgent'?'<span class="badge badge-danger">紧急</span>':''}
+          </div>
+          <div class="detail-group"><h3>事件信息</h3><div class="detail-list">
+            <div class="detail-row"><dt>事发日期</dt><dd>${r.event?.occurred_at||'-'}</dd></div>
+            <div class="detail-row"><dt>地点</dt><dd>${r.event?.location||'-'}</dd></div>
+            <div class="detail-row"><dt>描述</dt><dd>${r.event?.description||'-'}</dd></div>
+          </div></div>
+          <div class="detail-group"><h3>被举报对象</h3><div class="detail-list">
+            <div class="detail-row"><dt>类型</dt><dd>${r.subject?.type==='internal_employee'?'内部员工':'合作伙伴'}</dd></div>
+            <div class="detail-row"><dt>信息</dt><dd>${subjectText}</dd></div>
+          </div></div>
+          <div class="detail-group"><h3>举报人</h3><div class="detail-list">
+            <div class="detail-row"><dt>方式</dt><dd>${r.reporter_mode==='identified'?'实名':'匿名'}</dd></div>
+            ${r.has_identity?'<div class="detail-row"><dt>身份</dt><dd id="identity-area">'+(r.identity_revealed?'<span class="badge badge-success">已解密</span>':'<button class="btn btn-secondary btn-sm" id="reveal-btn">解密身份</button>')+'</dd></div>':''}
+          </div></div>
+          ${r.attachments.length?'<div class="detail-group"><h3>附件 ('+r.attachments.length+')</h3><div class="detail-list">'+r.attachments.map(a=>`<div class="detail-row"><dt>${a.original_name}</dt><dd>${fmtSize(a.size)} <a href="/api/admin/attachments/${a.id}" target="_blank" style="color:var(--info)">下载</a></dd></div>`).join('')+'</div></div>':''}
+          ${r.clues.length?'<div class="detail-group"><h3>补充线索 ('+r.clues.length+')</h3><div class="detail-list">'+r.clues.map(c=>`<div class="detail-row"><dt>${fmtDate(c.created_at)}</dt><dd>${c.content}</dd></div>`).join('')+'</div></div>':''}
+          <div class="detail-group"><h3>处理记录</h3><div class="detail-list">${r.events.map(e=>`<div class="detail-row"><dt>${fmtDate(e.created_at)}</dt><dd>${e.actor_name}: ${e.comment||(e.public_title||'')}${e.from+' → '+e.to}</dd></div>`).join('')}</div></div>
+        </div>
+        <div class="drawer-foot" id="action-bar">
+          ${canAccept?'<button class="btn btn-primary btn-sm" data-action="accept">受理</button>':''}
+          ${canReject?'<button class="btn btn-danger btn-sm" data-action="reject">不受理</button>':''}
+          ${canInvestigate?'<button class="btn btn-primary btn-sm" data-action="investigate">开始调查</button>':''}
+          ${canSubmitApproval?'<button class="btn btn-primary btn-sm" data-action="submit-approval">提交审批</button>':''}
+          ${canApprove?'<button class="btn btn-primary btn-sm" data-action="approve">审批通过</button>':''}
+          ${canReturn?'<button class="btn btn-secondary btn-sm" data-action="return">退回调查</button>':''}
+          <button class="btn btn-secondary btn-sm" data-action="comment">添加备注</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelector('.drawer-mask').addEventListener('click',()=>overlay.remove());
+
+    // 绑定操作
+    overlay.querySelectorAll('[data-action]').forEach(btn=>{
+      btn.addEventListener('click',()=>handleReportAction(id, btn.dataset.action, overlay));
+    });
+
+    // 解密身份
+    const revealBtn = $('#reveal-btn');
+    if (revealBtn){
+      revealBtn.addEventListener('click', async()=>{
+        try {
+          const res = await api('/api/admin/reports/'+id+'/reveal', {method:'POST', body:JSON.stringify({})});
+          if (res.identity){
+            $('#identity-area').innerHTML = `<strong>${res.identity.name}</strong> / ${res.identity.contact}`;
+          } else {
+            $('#identity-area').innerHTML = res.message || '无身份信息';
+          }
+          toast('身份已解密','success');
+        } catch(err){toast(err.message||'操作失败','error')}
+      });
+    }
+  } catch(err){toast(err.message||'加载失败','error')}
+}
+
+async function handleReportAction(id, action, overlay){
+  const needsComment = ['reject','submit-approval','approve','return','comment'].includes(action);
+  let comment = '';
+  if (needsComment){
+    comment = prompt(action==='comment'?'备注内容：':(action==='reject'?'不受理原因：':'审批意见：')) || '';
+    if (action==='reject' && !comment){toast('不受理需要填写原因','error');return}
+    if (action==='comment' && !comment) return;
+  }
+  try {
+    await api('/api/admin/reports/'+id+'/'+action, {method:'POST', body:JSON.stringify({comment})});
+    toast('操作成功','success');
+    overlay.remove();
+    if (adminState.currentPage === 'reports') fetchReports();
+    if (adminState.currentPage === 'dashboard') loadDashboard();
+  } catch(err){toast(err.message||'操作失败','error')}
+}
+
+// ─── 调查任务 ───
+async function loadTasks(){
+  $('#admin-content').innerHTML = `<div class="tbl-wrap"><div class="tbl-head"><span>调查任务列表</span></div><div class="tbl-scroll"><table><thead><tr><th>任务ID</th><th>案件编号</th><th>调查员</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="tasks-tbody"></tbody></table></div></div>`;
+  try {
+    const res = await api('/api/admin/investigation-tasks');
+    const tbody = $('#tasks-tbody');
+    if(!res.items.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-2)">暂无调查任务</td></tr>';return}
+    tbody.innerHTML = res.items.map(t=>`<tr>
+      <td class="td-main">${t.id}</td>
+      <td>${t.case_id}</td>
+      <td>${t.investigator_name||'-'}</td>
+      <td><span class="badge ${t.status==='completed'?'badge-success':'badge-info'}">${t.status==='completed'?'已完成':'进行中'}</span></td>
+      <td class="td-sub">${fmtDate(t.created_at)}</td>
+      <td>${t.status!=='completed'?`<button class="row-link" onclick="submitTaskReport('${t.id}')">提交报告</button>`:'-'}</td>
+    </tr>`).join('');
+  } catch(err){toast(err.message||'加载失败','error')}
+}
+
+window.submitTaskReport = async function(taskId){
+  const content = prompt('请输入调查报告内容：');
+  if(!content||content.length<10){toast('报告内容至少 10 个字','error');return}
+  try {
+    await api('/api/admin/investigation-tasks/'+taskId+'/report', {method:'POST', body:JSON.stringify({content})});
+    toast('报告已提交','success');
+    loadTasks();
+  } catch(err){toast(err.message||'提交失败','error')}
+}
+
+// ─── 统计分析 ───
+async function loadStatistics(){
+  $('#admin-content').innerHTML = `<div id="stats-content"></div>`;
+  try {
+    const res = await api('/api/admin/statistics');
+    const maxStatus = Math.max(...Object.values(res.by_status),1);
+    const maxCategory = Math.max(...Object.values(res.by_category),1);
+    const maxMonth = Math.max(...Object.values(res.by_month),1);
+    const statusLabels = STATUS_MAP;
+    const html = `
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+        <div class="kpi"><div class="kpi-label">工单总数</div><div class="kpi-value">${res.total}</div></div>
+        <div class="kpi"><div class="kpi-label">已办结</div><div class="kpi-value">${res.closed}</div></div>
+        <div class="kpi"><div class="kpi-label">平均处理时长</div><div class="kpi-value">${res.avg_duration_days}<span style="font-size:14px;font-weight:400"> 天</span></div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><h3>按状态分布</h3><ul class="bar-list">
+          ${Object.entries(res.by_status).map(([k,v])=>`<li><div class="bar-label"><span>${(statusLabels[k]||{label:k}).label}</span><span>${v}</span></div><div class="bar-track"><div class="bar-fill" style="width:${v/maxStatus*100}%"></div></div></li>`).join('')}
+        </ul></div>
+        <div class="chart-card"><h3>按类型分布</h3><ul class="bar-list">
+          ${Object.entries(res.by_category).map(([k,v])=>`<li><div class="bar-label"><span title="${k}">${k.length>12?k.slice(0,12)+'…':k}</span><span>${v}</span></div><div class="bar-track"><div class="bar-fill" style="width:${v/maxCategory*100}%"></div></div></li>`).join('')}
+        </ul></div>
+        <div class="chart-card"><h3>按月趋势</h3><ul class="bar-list">
+          ${Object.entries(res.by_month).sort().map(([k,v])=>`<li><div class="bar-label"><span>${k}</span><span>${v}</span></div><div class="bar-track"><div class="bar-fill" style="width:${v/maxMonth*100}%"></div></div></li>`).join('')}
+        </ul></div>
+        <div class="chart-card"><h3>按对象类型</h3><ul class="bar-list">
+          ${Object.entries(res.by_subject_type).map(([k,v])=>`<li><div class="bar-label"><span>${k==='internal_employee'?'内部员工':k==='partner'?'合作伙伴':k}</span><span>${v}</span></div><div class="bar-track"><div class="bar-fill" style="width:${v/Math.max(...Object.values(res.by_subject_type),1)*100}%"></div></div></li>`).join('')}
+        </ul></div>
+      </div>
+    `;
+    $('#stats-content').innerHTML = html;
+  } catch(err){toast(err.message||'加载失败','error')}
+}
+
+// ─── 系统管理 ───
+async function loadSettings(){
+  $('#admin-content').innerHTML = `
+    <div class="tabs">
+      <button class="tab" aria-selected="true" data-tab="settings">系统设置</button>
+      <button class="tab" data-tab="users">用户管理</button>
+      <button class="tab" data-tab="logs">审计日志</button>
+      <button class="tab" data-tab="backups">数据备份</button>
+    </div>
+    <div id="tab-content"></div>
+  `;
+  let currentTab = 'settings';
+  function switchTab(tab){
+    currentTab = tab;
+    $$('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.tab===tab));
+    if(tab==='settings') loadTabSettings();
+    if(tab==='users') loadTabUsers();
+    if(tab==='logs') loadTabLogs();
+    if(tab==='backups') loadTabBackups();
+  }
+  $$('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.tab)));
+  switchTab('settings');
+}
+
+async function loadTabSettings(){
+  try {
+    const res = await api('/api/admin/settings');
+    $('#tab-content').innerHTML = `
+      <div class="panel">
+        <div class="field"><label class="label">站点名称</label><input type="text" id="set-name" value="${res.site_name||''}" maxlength="200"></div>
+        <div class="field"><label class="label">公告</label><textarea id="set-announcement" maxlength="2000">${res.announcement||''}</textarea></div>
+        <button class="btn btn-primary" id="save-settings">保存设置</button>
+      </div>
+    `;
+    $('#save-settings').addEventListener('click', async()=>{
+      try {
+        await api('/api/admin/settings', {method:'PUT', body:JSON.stringify({
+          site_name: $('#set-name').value.trim(),
+          announcement: $('#set-announcement').value.trim(),
+        })});
+        toast('设置已保存','success');
+      } catch(err){toast(err.message||'保存失败','error')}
+    });
+  } catch(err){toast(err.message||'加载失败','error')}
+}
+
+async function loadTabUsers(){
+  try {
+    const res = await api('/api/admin/users');
+    const roleLabels = {system_admin:'系统管理员',case_manager:'案件管理',investigator:'调查员',approver:'审批人'};
+    $('#tab-content').innerHTML = `
+      <div style="margin-bottom:16px"><button class="btn btn-primary btn-sm" id="add-user">添加用户</button></div>
+      <div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead><tbody>
+      ${res.items.map(u=>`<tr>
+        <td class="td-main">${u.username}</td><td>${u.name}</td>
+        <td>${u.roles.map(r=>roleLabels[r]||r).join('、')}</td>
+        <td><span class="badge ${u.status==='active'?'badge-success':'badge-muted'}">${u.status==='active'?'正常':'禁用'}</span></td>
+        <td class="td-sub">${fmtDate(u.created_at)}</td>
+        <td>${u.username!=='admin'?`<button class="row-link" onclick="editUser('${u.id}')">编辑</button> <button class="row-link" onclick="deleteUser('${u.id}')" style="color:var(--danger)">删除</button>`:'-'}</td>
+      </tr>`).join('')}
+      </tbody></table></div></div>
+    `;
+    $('#add-user').addEventListener('click', addUserForm);
+  } catch(err){toast(err.message||'加载失败','error')}
+}
+
+function addUserForm(){
+  const name = prompt('用户名:');
+  if(!name) return;
+  const displayName = prompt('姓名:');
+  if(!displayName) return;
+  const password = prompt('密码 (至少8位):');
+  if(!password||password.length<8){toast('密码至少8位','error');return}
+  const roles = prompt('角色 (逗号分隔: system_admin,case_manager,investigator,approver):','investigator')||'investigator';
+  api('/api/admin/users', {method:'POST', body:JSON.stringify({
+    username:name, name:displayName, password, roles:roles.split(',').map(s=>s.trim()).filter(Boolean)
+  })}).then(()=>{toast('用户已创建','success');loadTabUsers()})
+    .catch(err=>toast(err.message||'创建失败','error'));
+}
+
+window.editUser = function(id){
+  const name = prompt('新姓名:');
+  if(name){
+    api('/api/admin/users/'+id, {method:'PATCH', body:JSON.stringify({name})})
+      .then(()=>{toast('已更新','success');loadTabUsers()})
+      .catch(err=>toast(err.message||'更新失败','error'));
+  }
+};
+
+window.deleteUser = function(id){
+  if(!confirm('确定删除该用户？')) return;
+  api('/api/admin/users/'+id, {method:'DELETE'})
+    .then(()=>{toast('已删除','success');loadTabUsers()})
+    .catch(err=>toast(err.message||'删除失败','error'));
+};
+
+async function loadTabLogs(){
+  try {
+    const res = await api('/api/admin/audit-logs?pageSize=50');
+    $('#tab-content').innerHTML = `<div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>时间</th><th>操作人</th><th>动作</th><th>资源</th><th>详情</th></tr></thead><tbody>
+    ${res.items.map(l=>`<tr><td class="td-sub">${fmtDate(l.created_at)}</td><td>${l.actor_name}</td><td>${l.action}</td><td>${l.resource_type}:${l.resource_id}</td><td class="td-sub">${JSON.stringify(l.details||{}).slice(0,100)}</td></tr>`).join('')}
+    </tbody></table></div><div class="pagination">共 ${res.total} 条</div></div>`;
+  } catch(err){toast(err.message||'加载失败','error')}
+}
+
+async function loadTabBackups(){
+  try {
+    const res = await api('/api/admin/backups');
+    $('#tab-content').innerHTML = `<div class="panel"><p style="color:var(--text-2);margin-bottom:16px">系统每天自动备份，保留最近 30 天。</p><div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr><th>备份文件</th></tr></thead><tbody>${res.backups.map(b=>`<tr><td>${b}</td></tr>`).join('')||'<tr><td style="text-align:center;padding:24px;color:var(--text-2)">暂无备份</td></tr>'}</tbody></table></div></div></div>`;
+  } catch(err){toast(err.message||'加载失败','error')}
+}
+
+// ════════════════════════════════════════════════════════════
+// 初始化
+// ════════════════════════════════════════════════════════════
+async function init(){
+  // 加载公共设置
+  try {
+    const settings = await api('/api/public/settings');
+    if (settings.announcement){
+      const banner = document.createElement('div');
+      banner.className = 'notice notice-info';
+      banner.style.cssText = 'margin:0;border-radius:0;border-left:0;border-right:0';
+      banner.innerHTML = `<span>${settings.announcement}</span>`;
+      $('.topbar').after(banner);
+    }
+  } catch {}
+
+  initReportWizard();
+  rebindSteps();
+  initQuery();
+  showView('home');
+  checkAdminRoute();
+}
+
+init();
+</script>
+</body>
+</html>
