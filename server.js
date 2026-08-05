@@ -402,7 +402,7 @@ async function createServer() {
       res.setHeader('access-control-allow-origin', origin);
       res.setHeader('access-control-allow-credentials', 'true');
       res.setHeader('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-      res.setHeader('access-control-allow-headers', 'content-type,x-csrf-token');
+      res.setHeader('access-control-allow-headers', 'content-type,authorization,x-csrf-token');
       res.setHeader('vary', 'origin');
     }
     if (method === 'OPTIONS') {
