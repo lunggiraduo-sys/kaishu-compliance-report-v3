@@ -13,6 +13,7 @@ const crypto = require('node:crypto');
 const net = require('node:net');
 
 const { createStore } = require('./lib/store');
+const { createSupabaseStore } = require('./lib/supabase-store');
 const {
   hashPassword, verifyPassword, encryptIdentity, decryptIdentity,
   createToken, createSessionCookie, clearCookie,
@@ -30,6 +31,11 @@ function loadConfig(env = process.env) {
   const querySessionTtlMin = parseInt(env.QUERY_SESSION_TTL_MINUTES || '30', 10);
   const maxFileMb = parseInt(env.MAX_FILE_SIZE_MB || '100', 10);
   const maxTotalMb = parseInt(env.MAX_TOTAL_UPLOAD_MB || '500', 10);
+
+  // Supabase 配置（部署到云端时使用）
+  const supabaseUrl = env.SUPABASE_URL || '';
+  const supabaseKey = env.SUPABASE_KEY || '';
+  const useSupabase = !!(supabaseUrl && supabaseKey);
 
   // 开发模式下自动生成密钥
   const reporterDataKey = env.REPORTER_DATA_KEY || (nodeEnv === 'production'
@@ -51,6 +57,7 @@ function loadConfig(env = process.env) {
 
   return {
     nodeEnv, port, dataDir, uploadDir,
+    supabaseUrl, supabaseKey, useSupabase,
     sessionTtlMin, querySessionTtlMin,
     maxFileBytes: maxFileMb * 1024 * 1024,
     maxTotalBytes: maxTotalMb * 1024 * 1024,
@@ -333,25 +340,19 @@ async function transitionCase(store, config, caseId, to, actor, options = {}) {
   return result;
 }
 
-// ─── 文件上传 (本地存储) ────────────────────────────────────
-async function saveUploadedFile(uploadDir, fileBuffer, originalName) {
-  const ext = path.extname(originalName).toLowerCase();
-  const safeName = `${crypto.randomUUID()}${ext}`;
-  const filePath = path.join(uploadDir, safeName);
-  await fsp.mkdir(uploadDir, { recursive: true });
-  await fsp.writeFile(filePath, fileBuffer);
-  return { storedName: safeName, originalName, size: fileBuffer.length };
-}
-
 // ─── 创建 HTTP 服务器 ───────────────────────────────────────
 async function createServer() {
   const config = loadConfig();
   const clock = () => new Date();
-  const store = createStore({ dataDir: config.dataDir, clock });
+  const store = config.useSupabase
+    ? createSupabaseStore({ supabaseUrl: config.supabaseUrl, supabaseKey: config.supabaseKey, clock })
+    : createStore({ dataDir: config.dataDir, clock });
   const rateLimiter = createRateLimiter({ clock: () => Date.now() });
 
-  // 确保上传目录存在
-  await fsp.mkdir(config.uploadDir, { recursive: true });
+  // 确保上传目录存在（仅本地模式）
+  if (!config.useSupabase) {
+    await fsp.mkdir(config.uploadDir, { recursive: true });
+  }
 
   // 加载前端 HTML
   const htmlPath = path.join(__dirname, 'index.html');
@@ -867,23 +868,25 @@ async function handlePublicUpload(req, res, store, config, rateLimiter) {
     const decl = validateFileDeclaration(file.filename, file.mime);
     if (!decl.valid) throw new HttpError(422, 'FILE_TYPE_REJECTED', decl.reason);
 
-    const saved = await saveUploadedFile(config.uploadDir, file.data, file.filename);
-
     let attachmentId;
     await store.transaction((d) => {
       d.meta.sequences.attachments = (d.meta.sequences.attachments || 0) + 1;
       attachmentId = `attachment-${String(d.meta.sequences.attachments).padStart(8, '0')}`;
       d.attachments.push({
         id: attachmentId,
-        stored_name: saved.storedName,
-        original_name: saved.originalName,
+        stored_name: attachmentId,
+        original_name: file.filename,
         mime: decl.mime,
-        size: saved.size,
+        size: file.size,
         status: 'uploaded',
         created_at: new Date().toISOString(),
       });
     });
-    uploadedAttachments.push({ id: attachmentId, name: saved.originalName, size: saved.size });
+
+    // 保存文件数据（本地文件系统或 Supabase）
+    await store.saveAttachment(attachmentId, file.data, file.filename, decl.mime);
+
+    uploadedAttachments.push({ id: attachmentId, name: file.filename, size: file.size });
   }
 
   sendJson(res, 201, { attachments: uploadedAttachments });
@@ -1590,19 +1593,13 @@ async function handleDownloadAttachment(req, res, store, config, attachmentId) {
   const attachment = data.attachments.find((a) => a.id === attachmentId);
   if (!attachment) throw new HttpError(404, 'NOT_FOUND', '附件不存在');
 
-  const filePath = path.join(config.uploadDir, attachment.stored_name);
-  try {
-    await fsp.access(filePath);
-  } catch {
-    throw new HttpError(404, 'FILE_NOT_FOUND', '文件不存在');
-  }
+  const file = await store.getAttachment(attachmentId);
+  if (!file) throw new HttpError(404, 'FILE_NOT_FOUND', '文件不存在');
 
-  const stat = await fsp.stat(filePath);
   res.setHeader('content-type', attachment.mime || 'application/octet-stream');
-  res.setHeader('content-length', stat.size);
+  res.setHeader('content-length', file.data.length);
   res.setHeader('content-disposition', `attachment; filename*=UTF-8''${encodeURIComponent(attachment.original_name)}`);
-  const stream = fs.createReadStream(filePath);
-  stream.pipe(res);
+  res.end(file.data);
 }
 
 // ════════════════════════════════════════════════════════════

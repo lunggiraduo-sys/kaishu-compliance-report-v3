@@ -5,22 +5,17 @@ ENV NODE_ENV=production PORT=3000
 WORKDIR /app
 
 RUN addgroup -S -g 10001 app \
-    && adduser -S -D -H -u 10001 -h /app -s /sbin/nologin -G app app \
-    && mkdir -p /app-data \
-    && chown app:app /app-data \
-    && chmod 0750 /app-data
+    && adduser -S -D -H -u 10001 -h /app -s /sbin/nologin -G app app
 
 COPY package.json ./
 COPY server.js index.html ./
 COPY lib ./lib
+COPY schema.sql ./
 
 RUN chmod 0555 /app /app/lib \
-    && chmod 0444 /app/package.json /app/server.js /app/index.html /app/lib/*.js
+    && chmod 0444 /app/package.json /app/server.js /app/index.html /app/schema.sql /app/lib/*.js
 
 USER app
-
-ENV DATA_DIR=/app-data
-ENV UPLOAD_DIR=/app-data/uploads
 
 EXPOSE 3000
 
