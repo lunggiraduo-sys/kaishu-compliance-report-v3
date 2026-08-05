@@ -601,6 +601,9 @@ const STATUS_MAP = {
   not_accepted: {label:'未受理',cls:'badge-danger'},
 };
 
+// 当前部署在 GitHub Pages 时，API 请求指向阿里云 FC 后端
+const API_BASE = location.hostname.includes('github.io') ? 'https://kaishu-mpliance-vfzfgzxfoc.cn-hangzhou.fcapp.run' : '';
+
 let adminState = { csrfToken: '', user: null, currentPage: 'dashboard' };
 let reportState = { step: 1, data: {}, attachments: [] };
 
@@ -617,7 +620,7 @@ async function api(path, opts={}){
   if (adminState.csrfToken && opts.method && opts.method !== 'GET') {
     headers['x-csrf-token'] = adminState.csrfToken;
   }
-  const res = await fetch(path, { ...opts, headers });
+  const res = await fetch(API_BASE + path, { ...opts, headers });
   const data = await res.json().catch(()=>({error:{code:'PARSE_ERROR',message:'响应解析失败'}}));
   if (!res.ok) throw data.error || {code:'ERROR',message:'请求失败'};
   return data;
@@ -784,7 +787,7 @@ async function uploadFile(file){
   try {
     const fd = new FormData();
     fd.append('file', file);
-    const res = await fetch('/api/public/uploads', {method:'POST', body:fd});
+    const res = await fetch(API_BASE + '/api/public/uploads', {method:'POST', body:fd});
     const data = await res.json();
     if (!res.ok) throw data.error;
     const att = data.attachments[0];
@@ -1149,7 +1152,7 @@ window.openReportDetail = async function(id){
             <div class="detail-row"><dt>方式</dt><dd>${r.reporter_mode==='identified'?'实名':'匿名'}</dd></div>
             ${r.has_identity?'<div class="detail-row"><dt>身份</dt><dd id="identity-area">'+(r.identity_revealed?'<span class="badge badge-success">已解密</span>':'<button class="btn btn-secondary btn-sm" id="reveal-btn">解密身份</button>')+'</dd></div>':''}
           </div></div>
-          ${r.attachments.length?'<div class="detail-group"><h3>附件 ('+r.attachments.length+')</h3><div class="detail-list">'+r.attachments.map(a=>`<div class="detail-row"><dt>${a.original_name}</dt><dd>${fmtSize(a.size)} <a href="/api/admin/attachments/${a.id}" target="_blank" style="color:var(--info)">下载</a></dd></div>`).join('')+'</div></div>':''}
+          ${r.attachments.length?'<div class="detail-group"><h3>附件 ('+r.attachments.length+')</h3><div class="detail-list">'+r.attachments.map(a=>`<div class="detail-row"><dt>${a.original_name}</dt><dd>${fmtSize(a.size)} <a href="${API_BASE}/api/admin/attachments/${a.id}" target="_blank" style="color:var(--info)">下载</a></dd></div>`).join('')+'</div></div>':''}
           ${r.clues.length?'<div class="detail-group"><h3>补充线索 ('+r.clues.length+')</h3><div class="detail-list">'+r.clues.map(c=>`<div class="detail-row"><dt>${fmtDate(c.created_at)}</dt><dd>${c.content}</dd></div>`).join('')+'</div></div>':''}
           <div class="detail-group"><h3>处理记录</h3><div class="detail-list">${r.events.map(e=>`<div class="detail-row"><dt>${fmtDate(e.created_at)}</dt><dd>${e.actor_name}: ${e.comment||(e.public_title||'')}${e.from+' → '+e.to}</dd></div>`).join('')}</div></div>
         </div>

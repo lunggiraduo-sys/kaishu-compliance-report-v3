@@ -388,6 +388,21 @@ async function createServer() {
     res.setHeader('referrer-policy', 'no-referrer');
     res.setHeader('cache-control', 'no-store');
 
+    // CORS: 允许 GitHub Pages 跨域访问（前后端分离部署）
+    const origin = req.headers.origin || '';
+    if (/^https:\/\/[a-z0-9-]+\.github\.io$/i.test(origin)) {
+      res.setHeader('access-control-allow-origin', origin);
+      res.setHeader('access-control-allow-credentials', 'true');
+      res.setHeader('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+      res.setHeader('access-control-allow-headers', 'content-type,x-csrf-token');
+      res.setHeader('vary', 'origin');
+    }
+    if (method === 'OPTIONS') {
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
+
     try {
       // ── 静态文件 ──
       if ((method === 'GET' || method === 'HEAD') && (pathname === '/' || pathname === '/index.html')) {
@@ -1694,10 +1709,17 @@ exports.handler = async (rawEvent, context) => {
       res.on('data', (c) => chunks.push(c));
       res.on('end', () => {
         const buf = Buffer.concat(chunks);
-        const binary = _isBinaryContent(res.headers['content-type']);
+        const contentType = res.headers['content-type'] || '';
+        const binary = _isBinaryContent(contentType);
+        // 修复 FC 3.0 默认给 HTML 响应添加 Content-Disposition: attachment 的问题
+        const outHeaders = Object.assign({}, res.headers);
+        const cd = (outHeaders['content-disposition'] || outHeaders['Content-Disposition'] || '').toLowerCase();
+        if (!cd && contentType.includes('text/html')) {
+          outHeaders['content-disposition'] = 'inline';
+        }
         resolve({
           statusCode: res.statusCode,
-          headers: res.headers,
+          headers: outHeaders,
           isBase64Encoded: binary,
           body: binary ? buf.toString('base64') : buf.toString('utf8'),
         });
