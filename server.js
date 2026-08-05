@@ -1629,4 +1629,74 @@ if (require.main === module) {
   });
 }
 
-module.exports = { createServer, loadConfig };
+// ─── 阿里云函数计算 (FC) 适配器 ──────────────────────────────
+// 冷启动在回环地址起一个本地 HTTP server，把 FC 事件转发给它，
+// 从而复用完整路由逻辑，无需改造业务代码。适用于 FC 内置
+// Node.js 运行时 + HTTP 触发器（免 Docker、免容器镜像）。
+let _fcServerPromise = null;
+async function _getFcServer() {
+  if (!_fcServerPromise) {
+    _fcServerPromise = (async () => {
+      const s = await createServer();
+      await new Promise((resolve) => s.listen(0, '127.0.0.1', resolve));
+      return s;
+    })();
+  }
+  return _fcServerPromise;
+}
+
+function _buildQueryString(query) {
+  const usp = new URLSearchParams();
+  for (const [k, v] of Object.entries(query || {})) {
+    if (Array.isArray(v)) v.forEach((x) => usp.append(k, x));
+    else usp.append(k, v);
+  }
+  return usp.toString();
+}
+
+function _isBinaryContent(ct) {
+  if (!ct) return false;
+  return /(image\/|audio\/|video\/|application\/octet-stream|application\/pdf|application\/zip|application\/download|application\/x-)/i.test(ct);
+}
+
+exports.handler = async (event, context) => {
+  const server = await _getFcServer();
+  const { port } = server.address();
+  const path = (event.path || '/') +
+    ((event.queryString && Object.keys(event.queryString).length) ? '?' + _buildQueryString(event.queryString) : '');
+  const headers = Object.assign({}, event.headers || {});
+  if (!headers.host) headers.host = '127.0.0.1';
+
+  return new Promise((resolve, reject) => {
+    const req = http.request({
+      host: '127.0.0.1',
+      port,
+      path,
+      method: event.httpMethod || 'GET',
+      headers,
+    }, (res) => {
+      const chunks = [];
+      res.on('data', (c) => chunks.push(c));
+      res.on('end', () => {
+        const buf = Buffer.concat(chunks);
+        const binary = _isBinaryContent(res.headers['content-type']);
+        resolve({
+          statusCode: res.statusCode,
+          headers: res.headers,
+          isBase64Encoded: binary,
+          body: binary ? buf.toString('base64') : buf.toString('utf8'),
+        });
+      });
+    });
+    req.on('error', reject);
+    if (event.body) {
+      const data = event.isBase64Encoded
+        ? Buffer.from(event.body, 'base64')
+        : Buffer.from(event.body, 'utf8');
+      req.write(data);
+    }
+    req.end();
+  });
+};
+
+module.exports = { createServer, loadConfig, handler: exports.handler };
