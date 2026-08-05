@@ -1,0 +1,39 @@
+modules = ["nodejs-20", "web"]
+
+run = "node server.js"
+
+[nix]
+channel = "stable-25_05"
+
+[agent]
+expertMode = true
+
+[deployment]
+build = ["sh", "-c", "npm install"]
+run = ["sh", "-c", "node server.js"]
+deploymentTarget = "cloudrun"
+
+[env]
+NODE_ENV = "production"
+PORT = "5000"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[workflows]
+runButton = "Project"
+
+[[workflows.modes]]
+name = "Project"
+mode = "single"
+steps = ["setup", "run"]
+
+[[workflows.modes.steps]]
+name = "Setup"
+command = "npm install"
+runOnCreate = true
+
+[[workflows.modes.steps]]
+name = "Run"
+command = "node server.js"
